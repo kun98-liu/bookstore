@@ -37,8 +37,9 @@ public class UserServlet extends BaseServlet {
             req.setAttribute("username", user.getUsername());
             req.getRequestDispatcher("/pages/user/login.jsp").forward(req, resp);
         }else {
+            User loginUser = userService.login(user);
             //保存用户登录之后的信息到Session
-            req.getSession().setAttribute("user", user);
+            req.getSession().setAttribute("user",loginUser);
             req.getRequestDispatcher("/pages/user/login_success.jsp").forward(req, resp);;
 
         }
