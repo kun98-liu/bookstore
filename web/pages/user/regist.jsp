@@ -15,6 +15,17 @@
     <script>
 
         $(function () {
+            //使用ajax请求验证用户名是否可用
+            $("#username").blur(function () {
+                var username = this.value;
+                $.getJSON("${basePath}userServlet","action=ajaxExistUsername&username="+username,function (data) {
+                    if(data.existsUsername == true){
+                        $("span.errorMsg").text("用户名已存在");
+                    }else{
+                        $("span.errorMsg").text("用户名可用");
+                    }
+                })
+            });
             //给验证码图片绑上单击事件
             $("#codeImg").click(function () {
                 this.src = "${basePath}kaptcha.jpg?d=" + new Date();

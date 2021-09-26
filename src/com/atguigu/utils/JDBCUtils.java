@@ -18,6 +18,7 @@ import java.util.Properties;
 public class JDBCUtils {
 
     private static DruidDataSource dataSource;
+    private static ThreadLocal<Connection> conns = new ThreadLocal<>();
 
     static {
         try {
@@ -34,9 +35,69 @@ public class JDBCUtils {
      * 使用druid数据库连接池获取连接
      */
     public static Connection getConnection() throws SQLException {
-        Connection conn = dataSource.getConnection();
+        Connection conn = conns.get();
+        if(conn == null){
+            try {
+                conn = dataSource.getConnection();
+                conns.set(conn);
+                conn.setAutoCommit(false);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
         return conn;
     }
+
+    /**
+     * 提交并结束连接
+     */
+    public static void commitAndClose(){
+        Connection connection = conns.get();
+        if(connection != null){
+            try {
+                connection.commit();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }finally {
+                {
+                    try {
+                        connection.close();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        conns.remove();
+
+    }
+
+    /**
+     * 回滚并结束链接
+     */
+    public static void rollbackAndClose(){
+
+        Connection connection = conns.get();
+        if(connection != null){
+            try {
+                connection.rollback();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }finally {
+                {
+                    try {
+                        connection.close();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        conns.remove();
+    }
+
 
     /**
      * 关闭数据库连接
@@ -50,27 +111,6 @@ public class JDBCUtils {
         }
     }
 
-//    public static void closeResource(Connection conn, Statement ps, ResultSet rs) {
-//        try {
-//            if (conn != null)
-//                conn.close();
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//        try {
-//            if (ps != null)
-//                ps.close();
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//        try {
-//            if (rs != null)
-//                rs.close();
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//
-//    }
 
 
 }
